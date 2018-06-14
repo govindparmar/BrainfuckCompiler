@@ -104,7 +104,7 @@ errno_t __cdecl compile(
 				break;
 			case ']':
 				indent_level--;
-				if(indent_level < 0)
+				if(indent_level < 1)
 				{
 					fwprintf_s(stderr, L"Compilation error: mismatched \"]\" character\n");
 					unlink(outfile);
