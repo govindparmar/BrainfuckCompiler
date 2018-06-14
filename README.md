@@ -7,16 +7,10 @@ Compiles [Brainfuck](https://en.wikipedia.org/wiki/Brainfuck) programs to C.
 
 ### Example Programs:
 #### Hello World:
-	```brainfuck
 	++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.
-	```
 
 #### Echo single character:
-	```brainfuck
 	,.
-	```
 
 #### Print the alphabet:
-	```brainfuck
 	++++++++++++++++++++++++++>+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++<[>.+<-]
-	```
