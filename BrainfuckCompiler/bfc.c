@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <wchar.h>
 #include <sal.h>
 
 // Constants for the generated C file
@@ -19,11 +20,11 @@ const char END_LOOP[] = "}\r\n";
 typedef unsigned char byte;
 
 /**
- * Writes tabs to the output file based on the current indentation level.
- * PARAMETERS:
- *  indent_level - The number of tabs to insert
- *  fp - A valid, opened, file pointer opened with "wb" or "w"
- */
+* Writes tabs to the output file based on the current indentation level.
+* PARAMETERS:
+*  indent_level - The number of tabs to insert
+*  fp - A valid, opened, file pointer opened with "wb" or "w"
+*/
 void inline writetabs(
 	_In_range_(0, INT_MAX) int indent_level,
 	_In_ FILE *fp
@@ -37,15 +38,15 @@ void inline writetabs(
 }
 
 /**
- * Compiles a Brainfuck program into a C program
- * PARAMETERS:
- *  len - The length of "buffer" in bytes
- *  buffer - The contents of a brainfuck program
- *  outfile - The name of the output file to create
- * RETURNS:
- *  0 if successful, a value from errno.h if something 
- *  fails
- */
+* Compiles a Brainfuck program into a C program
+* PARAMETERS:
+*  len - The length of "buffer" in bytes
+*  buffer - The contents of a brainfuck program
+*  outfile - The name of the output file to create
+* RETURNS:
+*  0 if successful, a value from errno.h if something
+*  fails
+*/
 _Pre_satisfies_(buffer != NULL && wcslen(outfile) > 0 && len > 0)
 _Success_(return == 0)
 _Check_return_
@@ -104,10 +105,10 @@ errno_t __cdecl compile(
 				break;
 			case ']':
 				indent_level--;
-				if(indent_level < 1)
+				if(indent_level < 0)
 				{
 					fwprintf_s(stderr, L"Compilation error: mismatched \"]\" character\n");
-					unlink(outfile);
+					_wunlink(outfile);
 					return ENOEXEC;
 				}
 				writetabs(indent_level, fp);
@@ -126,8 +127,8 @@ errno_t __cdecl compile(
 }
 
 /**
- * Entry point
- */
+* Entry point
+*/
 int __cdecl wmain(
 	_In_ int argc,
 	_In_reads_(argc) wchar_t *argv[]
