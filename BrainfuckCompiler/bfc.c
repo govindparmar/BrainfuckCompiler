@@ -176,3 +176,4 @@ int __cdecl wmain(
 	buffer = NULL;
 	return 0;
 }
+
