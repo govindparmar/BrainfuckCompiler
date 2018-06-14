@@ -108,6 +108,7 @@ errno_t __cdecl compile(
 				if(indent_level < 1)
 				{
 					fwprintf_s(stderr, L"Compilation error: mismatched \"]\" character\n");
+					fclose(fp);
 					_wunlink(outfile);
 					return ENOEXEC;
 				}
