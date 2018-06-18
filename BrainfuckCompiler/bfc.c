@@ -8,8 +8,10 @@
 // Constants for the generated C file
 const char PREFIX_STRING[] = "#include <stdio.h>\r\n#include <stdlib.h>\r\nint main()\r\n{\r\n\tchar data[300000];\r\n\tchar *p = &data[0];\r\n\tmemset(data, 0, 300000);\r\n";
 const char SUFFIX_STRING[] = "\treturn 0;\r\n}\r\n";
+const char CHG_PTR_STRING[] = "p+=%d;\r\n";
 const char INC_PTR_STRING[] = "++p;\r\n";
 const char DEC_PTR_STRING[] = "--p;\r\n";
+const char CHG_PTRVAL_STRING[] = "*p+=%d;\r\n";
 const char INC_PTRVAL_STRING[] = "++*p;\r\n";
 const char DEC_PTRVAL_STRING[] = "--*p;\r\n";
 const char OUTPUT_PTR_BYTE[] = "putchar(*p);\r\n";
@@ -20,11 +22,90 @@ const char END_LOOP[] = "}\r\n";
 typedef unsigned char byte;
 
 /**
-* Writes tabs to the output file based on the current indentation level.
+* Returns the total change in the value of the pointer address
+* from a string of '>' and '<' characters in a brainfuck program.
 * PARAMETERS:
-*  indent_level - The number of tabs to insert
-*  fp - A valid, opened, file pointer opened with "wb" or "w"
+*  pos - Pointer to the current index into the program text
+*  len - The length, in bytes, of the buffer containing program text
+*  buffer - The buffer containing the program text
+* RETURNS:
+*  The net change in the pointer address after the + and - string.
 */
+_Pre_satisfies_(*pos >= 0 && len > 0 && buffer != NULL)
+_Ret_range_(INT_MIN, INT_MAX)
+_Check_return_
+int __cdecl getpointerdelta(
+	_Inout_ size_t *pos,
+	_In_ size_t len,
+	_In_reads_(len) byte *buffer
+)
+{
+	int delta = 0;
+	while (*pos <= len)
+	{
+		switch (buffer[*pos])
+		{
+		case '>':
+			delta++;
+			break;
+		case '<':
+			delta--;
+			break;
+		default:
+			// So the current character is processed by the appropriate handler rather than skipped
+			(*pos)--;
+			return delta;
+		}
+		(*pos)++;
+	}
+	return delta;
+}
+
+/**
+ * Returns the total change in the value of the pointed-to cell
+ * from a string of '+' and '-' characters in a brainfuck program.
+ * PARAMETERS:
+ *  pos - Pointer to the current index into the program text
+ *  len - The length, in bytes, of the buffer containing program text
+ *  buffer - The buffer containing the program text
+ * RETURNS:
+ *  The net change in the pointed-to value after the + and - string.
+ */
+_Pre_satisfies_(*pos >= 0 && len > 0 && buffer != NULL)
+_Check_return_
+int __cdecl getvaluedelta(
+	_Inout_ size_t *pos,
+	_In_ size_t len,
+	_In_reads_(len) byte *buffer
+)
+{
+	int delta = 0;
+	while (*pos <= len)
+	{
+		switch (buffer[*pos])
+		{
+		case '+':
+			delta++;
+			break;
+		case '-':
+			delta--;
+			break;
+		default:
+			// So the current character is processed by the appropriate handler rather than skipped
+			(*pos)--;
+			return delta;
+		}
+		(*pos)++;
+	}
+	return delta;
+}
+
+/**
+ * Writes tabs to the output file based on the current indentation level.
+ * PARAMETERS:
+ *  indent_level - The number of tabs to insert
+ *  fp - A valid, opened, file pointer opened with "wb" or "w"
+ */
 void inline writetabs(
 	_In_range_(0, INT_MAX) int indent_level,
 	_In_ FILE *fp
@@ -38,15 +119,15 @@ void inline writetabs(
 }
 
 /**
-* Compiles a Brainfuck program into a C program
-* PARAMETERS:
-*  len - The length of "buffer" in bytes
-*  buffer - The contents of a brainfuck program
-*  outfile - The name of the output file to create
-* RETURNS:
-*  0 if successful, a value from errno.h if something
-*  fails
-*/
+ * Compiles a Brainfuck program into a C program
+ * PARAMETERS:
+ *  len - The length of "buffer" in bytes
+ *  buffer - The contents of a brainfuck program
+ *  outfile - The name of the output file to create
+ * RETURNS:
+ *  0 if successful, a value from errno.h if something
+ *  fails
+ */
 _Pre_satisfies_(buffer != NULL && wcslen(outfile) > 0 && len > 0)
 _Success_(return == 0)
 _Check_return_
@@ -72,46 +153,59 @@ errno_t __cdecl compile(
 
 	for(i = 0; i < len; i++)
 	{
+		int delta;
 		switch(buffer[i])
-		{
-			case '>':
-				writetabs(indent_level, fp);
+		{		
+		case '>':
+		case '<':
+			writetabs(indent_level, fp);
+			delta = getpointerdelta(&i, len, buffer);
+			switch (delta)
+			{
+			case 1:
 				fwrite(INC_PTR_STRING, 1, 6, fp);
 				break;
-			case '<':
-				writetabs(indent_level, fp);
+			case -1:
 				fwrite(DEC_PTR_STRING, 1, 6, fp);
 				break;
-			case '+':
-				writetabs(indent_level, fp);
-				fwrite(INC_PTRVAL_STRING, 1, 7, fp);
+			default:
+				fprintf(fp, CHG_PTR_STRING, delta);
 				break;
-			case '-':
+			}
+			break;
+		case '+':
+		case '-':
 				writetabs(indent_level, fp);
-				fwrite(DEC_PTRVAL_STRING, 1, 7, fp);
+				delta = getvaluedelta(&i, len, buffer);
+				switch (delta)
+				{
+				case 1:
+					fwrite(INC_PTRVAL_STRING, 1, 7, fp);
+					break;
+				case -1:
+					fwrite(DEC_PTRVAL_STRING, 1, 7, fp);
+					break;
+				default:
+					fprintf(fp, CHG_PTRVAL_STRING, delta);
+					break;
+				}
+
 				break;
-			case '.':
+		case '.':
 				writetabs(indent_level, fp);
 				fwrite(OUTPUT_PTR_BYTE, 1, 14, fp);
 				break;
-			case ',':
+		case ',':
 				writetabs(indent_level, fp);
 				fwrite(READ_PTR_BYTE, 1, 17, fp);
 				break;
-			case '[':
+		case '[': 
 				writetabs(indent_level, fp);
 				indent_level++;
 				fwrite(LOOP_NONZERO, 1, 14, fp);
 				break;
-			case ']':
+		case ']':
 				indent_level--;
-				if(indent_level < 1)
-				{
-					fwprintf_s(stderr, L"Compilation error: mismatched \"]\" character\n");
-					fclose(fp);
-					_wunlink(outfile);
-					return ENOEXEC;
-				}
 				writetabs(indent_level, fp);
 				fwrite(END_LOOP, 1, 3, fp);
 				break;
@@ -128,8 +222,8 @@ errno_t __cdecl compile(
 }
 
 /**
-* Entry point
-*/
+ * Entry point
+ */
 int __cdecl wmain(
 	_In_ int argc,
 	_In_reads_(argc) wchar_t *argv[]
