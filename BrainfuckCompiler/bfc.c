@@ -22,17 +22,16 @@ const char END_LOOP[] = "}\r\n";
 typedef unsigned char byte;
 
 /**
-* Returns the total change in the value of the pointer address
-* from a string of '>' and '<' characters in a brainfuck program.
-* PARAMETERS:
-*  pos - Pointer to the current index into the program text
-*  len - The length, in bytes, of the buffer containing program text
-*  buffer - The buffer containing the program text
-* RETURNS:
-*  The net change in the pointer address after the + and - string.
-*/
+ * Returns the total change in the value of the pointer address
+ * from a string of '>' and '<' characters in a brainfuck program.
+ * PARAMETERS:
+ *  pos - Pointer to the current index into the program text
+ *  len - The length, in bytes, of the buffer containing program text
+ *  buffer - The buffer containing the program text
+ * RETURNS:
+ *  The net change in the pointer address after the + and - string.
+ */
 _Pre_satisfies_(*pos >= 0 && len > 0 && buffer != NULL)
-_Ret_range_(INT_MIN, INT_MAX)
 _Check_return_
 int __cdecl getpointerdelta(
 	_Inout_ size_t *pos,
