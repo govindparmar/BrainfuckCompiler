@@ -29,7 +29,7 @@ typedef unsigned char byte;
  *  len - The length, in bytes, of the buffer containing program text
  *  buffer - The buffer containing the program text
  * RETURNS:
- *  The net change in the pointer address after the + and - string.
+ *  The net change in the pointer address after the < and > string.
  */
 _Pre_satisfies_(*pos >= 0 && len > 0 && buffer != NULL)
 _Check_return_
@@ -51,7 +51,7 @@ int __cdecl getpointerdelta(
 			delta--;
 			break;
 		default:
-			// So the current character is processed by the appropriate handler rather than skipped
+			// So that the current character that breaks the <> chain is not skipped
 			(*pos)--;
 			return delta;
 		}
@@ -142,7 +142,7 @@ errno_t __cdecl compile(
 	int indent_level = 1;
 
 	err = _wfopen_s(&fp, outfile, L"wb");
-	if(err != 0)
+	if(NULL == fp || err != 0)
 	{
 		fwprintf_s(stderr, L"Could not create output file, error: %d\n", err);
 		return err;
@@ -240,10 +240,10 @@ int __cdecl wmain(
 	}
 
 	err = _wfopen_s(&fp, argv[1], L"rb");
-	if(err != 0 || fp == NULL)
+	if(NULL == fp || err != 0)
 	{
 		_wperror(L"_wfopen_s");
-		exit(EXIT_FAILURE);
+		exit(err);
 	}
 
 	fseek(fp, 0, SEEK_END);
@@ -251,10 +251,10 @@ int __cdecl wmain(
 	rewind(fp);
 
 	buffer = malloc(len + 1);
-	if(buffer == NULL)
+	if(NULL == buffer)
 	{
 		_wperror(L"malloc");
-		exit(EXIT_FAILURE);
+		exit(ENOMEM);
 	}
 	fread(buffer, 1, len, fp);
 	fclose(fp);
