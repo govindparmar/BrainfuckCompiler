@@ -6,7 +6,7 @@
 #include <sal.h>
 
 // Constants for the generated C file
-const char PREFIX_STRING[] = "#include <stdio.h>\r\n#include <stdlib.h>\r\nint main()\r\n{\r\n\tchar data[300000];\r\n\tchar *p = &data[0];\r\n\tmemset(data, 0, 300000);\r\n";
+const char PREFIX_STRING[] = "#include <stdio.h>\r\n#include <stdlib.h>\r\n#include <string.h>\r\nint main()\r\n{\r\n\tchar data[300000];\r\n\tchar *p = &data[0];\r\n\tmemset(data, 0, 300000);\r\n";
 const char SUFFIX_STRING[] = "\treturn 0;\r\n}\r\n";
 const char CHG_PTR_STRING[] = "p+=%d;\r\n";
 const char INC_PTR_STRING[] = "++p;\r\n";
