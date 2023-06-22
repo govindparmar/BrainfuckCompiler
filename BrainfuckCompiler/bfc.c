@@ -148,7 +148,7 @@ errno_t __cdecl compile(
 		return err;
 	}
 
-	fwrite(PREFIX_STRING, 1, 126, fp);
+	fwrite(PREFIX_STRING, 1, 147, fp);
 
 	for(i = 0; i < len; i++)
 	{
@@ -209,7 +209,7 @@ errno_t __cdecl compile(
 				fwrite(END_LOOP, 1, 3, fp);
 				break;
 				// So that non-brainfuck characters do not disrupt program compilation
-			default:
+		default:
 				break;
 		}
 	}
